@@ -3,9 +3,6 @@ import { render, Box, Text, useInput, useApp } from 'ink';
 import SelectInput from 'ink-select-input';
 import fs from 'fs';
 import path from 'path';
-import { loadYoga } from 'yoga-layout/load';
-
-const Yoga = await loadYoga();
 
 enum EditorMode {
   EDIT = 'edit',
@@ -17,7 +14,7 @@ const getMarkdownFiles = () => {
   const currentDir = process.cwd();
   const files = fs.readdirSync(currentDir);
   const markdownFiles = [];
-  
+
   for (const file of files) {
     if (fs.statSync(path.join(currentDir, file)).isDirectory()) {
       try {
@@ -39,13 +36,13 @@ const getMarkdownFiles = () => {
       });
     }
   }
-  
+
   return markdownFiles;
 };
 
 const FileSelector = ({ onSelect }: { onSelect: (filePath: string) => void }) => {
   const items = getMarkdownFiles();
-  
+
   if (items.length === 0) {
     return (
       <Box flexDirection="column">
@@ -53,13 +50,13 @@ const FileSelector = ({ onSelect }: { onSelect: (filePath: string) => void }) =>
       </Box>
     );
   }
-  
+
   return (
     <Box flexDirection="column">
       <Text>Select a markdown file:</Text>
-      <SelectInput 
-        items={items} 
-        onSelect={(item: { value: string }) => onSelect(item.value)} 
+      <SelectInput
+        items={items}
+        onSelect={(item: { value: string }) => onSelect(item.value)}
       />
     </Box>
   );
@@ -92,11 +89,11 @@ const MarkdownEditor = ({ filePath }: { filePath: string }) => {
       });
       return;
     }
-    
+
     if (mode !== EditorMode.EDIT) {
       return;
     }
-    
+
     if (key.ctrl && input === 's') {
       fs.writeFile(filePath, content, (err) => {
         if (err) {
@@ -180,30 +177,57 @@ const MarkdownEditor = ({ filePath }: { filePath: string }) => {
   const renderMarkdownPreview = (line: string) => {
     if (line.startsWith('# ')) {
       return (
-        <Box>
-          <Text bold color="blue" backgroundColor="black" wrap="wrap">
-            {line.substring(2)}
+        <Box paddingY={0}>
+          <Text
+            bold
+            inverse
+            backgroundColor="blue"
+            color="white"
+          >
+            {' ' + line.substring(2) + ' '}
           </Text>
         </Box>
       );
     } else if (line.startsWith('## ')) {
       return (
         <Box paddingLeft={1}>
-          <Text bold color="cyan" wrap="wrap">
+          <Text bold underline color="cyan">
             {line.substring(3)}
           </Text>
         </Box>
       );
     } else if (line.startsWith('### ')) {
-      return <Box paddingLeft={2}><Text bold color="green" wrap="wrap">{line.substring(4)}</Text></Box>;
+      return (
+        <Box paddingLeft={2}>
+          <Text bold color="green">
+            {line.substring(4)}
+          </Text>
+        </Box>
+      );
     } else if (line.startsWith('#### ')) {
-      return <Box paddingLeft={4}><Text color="yellow" wrap="wrap">{line.substring(5)}</Text></Box>;
-    } else if (line.startsWith('- ')) {
-      return <Text wrap="wrap">  • {line.substring(2)}</Text>;
+      return (
+        <Box paddingLeft={3}>
+          <Text color="yellow">{line.substring(5)}</Text>
+        </Box>
+      );
+    } else if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+      const content = line.replace(/^[-*]\s*/, '');
+      return (
+        <Box paddingLeft={4}>
+          <Text>• {content}</Text>
+        </Box>
+      );
+    } else if (line.trim() === '') {
+      return <Text>{' '}</Text>;
     } else {
-      return <Text wrap="wrap">{line}</Text>;
+      return (
+        <Box paddingLeft={2}>
+          <Text>{line}</Text>
+        </Box>
+      );
     }
   };
+
 
   const lines = content.split('\n');
 
@@ -218,19 +242,19 @@ const MarkdownEditor = ({ filePath }: { filePath: string }) => {
                 <Text>
                   {index === cursor.line
                     ? (
-                        line.length === 0
-                          ? '█'
-                          : cursor.column === line.length
-                            ? line + '█'
-                            : line.slice(0, cursor.column) + '█' + line.slice(cursor.column + 1)
-                      )
+                      line.length === 0
+                        ? '█'
+                        : cursor.column === line.length
+                          ? line + '█'
+                          : line.slice(0, cursor.column) + '█' + line.slice(cursor.column + 1)
+                    )
                     : line}
                 </Text>
               </Box>
             ))}
           </Box>
         );
-      
+
       case EditorMode.VIEW:
         return (
           <Box flexDirection="column">
@@ -242,7 +266,7 @@ const MarkdownEditor = ({ filePath }: { filePath: string }) => {
             ))}
           </Box>
         );
-      
+
       case EditorMode.PREVIEW:
         return (
           <Box flexDirection="column">
@@ -266,7 +290,7 @@ const MarkdownEditor = ({ filePath }: { filePath: string }) => {
       </Box>
       <Box>
         <Text>
-          Mode: <Text color="green" bold>{mode.toUpperCase()}</Text> | 
+          Mode: <Text color="green" bold>{mode.toUpperCase()}</Text> |
           Line: {cursor.line + 1}, Column: {cursor.column + 1}{' '}
           {modified ? '(modified)' : ''}
         </Text>
@@ -282,11 +306,11 @@ const MarkdownEditor = ({ filePath }: { filePath: string }) => {
 
 const App = () => {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  
+
   if (!selectedFile) {
     return <FileSelector onSelect={setSelectedFile} />;
   }
-  
+
   return <MarkdownEditor filePath={selectedFile} />;
 };
 

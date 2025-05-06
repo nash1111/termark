@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx src/cli.tsx",
-    "build": "tsc src/cli.tsx --outDir dist",
+    "build": "tsc",
     "start": "node dist/cli.js"
   },
   "keywords": [],

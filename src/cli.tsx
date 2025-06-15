@@ -220,9 +220,38 @@ const MarkdownEditor = ({ filePath }: { filePath: string }) => {
     } else if (line.trim() === '') {
       return <Text>{' '}</Text>;
     } else {
+      const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+
+      while ((match = imageRegex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(<Text key={`text-${lastIndex}`}>{line.substring(lastIndex, match.index)}</Text>);
+        }
+
+        const imageAlt = match[1];
+        const imagePath = match[2];
+        const fullPath = path.join(path.dirname(filePath), imagePath);
+        const exists = fs.existsSync(fullPath);
+        const imageName = path.basename(imagePath);
+
+        parts.push(
+          <Text key={`img-${match.index}`} backgroundColor={exists ? 'green' : 'red'} color="white" bold>
+            {` ![${imageAlt}](${imagePath}) [${imageName}] `}
+          </Text>
+        );
+
+        lastIndex = match.index + match[0].length;
+      }
+
+      if (lastIndex < line.length) {
+        parts.push(<Text key={`text-${lastIndex}`}>{line.substring(lastIndex)}</Text>);
+      }
+
       return (
         <Box paddingLeft={2}>
-          <Text>{line}</Text>
+          {parts.length > 0 ? parts : <Text>{line}</Text>}
         </Box>
       );
     }
